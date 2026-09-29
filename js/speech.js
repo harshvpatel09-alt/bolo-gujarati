@@ -33,7 +33,8 @@ const Speech = (() => {
      2. a pre-recorded pack shipped with the website (audio/index.json + one clips file). */
   let server = null;       // { voice, lang } when /tts is available
   let pack = null;         // { voice, lang, file, clips: { hash: [offset, length] } }
-  const serverReady = fetch('/tts/ok', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => { server = j; listeners.forEach((f) => f()); return j; }).catch(() => null);
+  const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  const serverReady = (isLocal ? fetch('/tts/ok', { cache: 'no-store' }) : Promise.reject(new Error('no local server'))).then((r) => (r.ok ? r.json() : null)).then((j) => { server = j; listeners.forEach((f) => f()); return j; }).catch(() => null);
   const packReady = serverReady.then((srv) => (srv ? null : fetch('audio/index.json').then((r) => (r.ok ? r.json() : null)).catch(() => null)))
     .then((j) => { pack = j; if (j) listeners.forEach((f) => f()); return j; });
 
